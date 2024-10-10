@@ -94,7 +94,7 @@ public class SystemMenu {
         String newName = scanner.nextLine();
 
         // Update in the database
-        String sql = "UPDATE tbl_borrowers SET name = ? WHERE br_id = ?";
+        String sql = "UPDATE tbl_borrowers SET br_name = ? WHERE br_id = ?";
         dbConfig.addRecord(sql, newName, borrowerId);
 
         System.out.println("Borrower updated successfully.");
