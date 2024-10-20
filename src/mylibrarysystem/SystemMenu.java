@@ -315,7 +315,7 @@ private void returnBook() {
     int bookId = scanner.nextInt();
     scanner.nextLine(); 
 
-    
+   
     if (!idExists("tbl_borrowers", "br_id", borrowerId)) {
         System.out.println("Borrower ID does not exist.");
         return;
@@ -343,10 +343,31 @@ private void returnBook() {
         return;
     }
 
-    
+   
     String sql = "DELETE FROM tbl_borrowed WHERE br_id = ? AND b_id = ?";
     dbConfig.addRecord(sql, borrowerId, bookId);
     System.out.println("Book returned successfully.");
+
+   
+    updatePenalties(borrowerId, bookId);
+}
+private void updatePenalties(int borrowerId, int bookId) {
+    String updatePenaltySql = "UPDATE tbl_penalties SET penalty_status = 'resolved', penalty_amount = 0 " +
+                               "WHERE br_id = ? AND b_id = ? AND penalty_status = 'overdue'";
+
+    try (Connection conn = dbConfig.connectDB();
+         PreparedStatement pstmt = conn.prepareStatement(updatePenaltySql)) {
+        pstmt.setInt(1, borrowerId);
+        pstmt.setInt(2, bookId);
+        int updatedRows = pstmt.executeUpdate();
+        if (updatedRows > 0) {
+            System.out.println("Penalties updated successfully.");
+        } else {
+            System.out.println("No penalties to update for this book and borrower.");
+        }
+    } catch (SQLException e) {
+        System.out.println("Error updating penalties: " + e.getMessage());
+    }
 }
    private void displayBorrowedBooksWithNames() {
     String sqlQuery = "SELECT bb.br_id, b.br_name AS borrower_name, bb.b_id, bk.b_title AS book_title " +
@@ -384,7 +405,101 @@ private int getValidIntegerInput(String prompt) {
         
     }
     
+    
 }
+
+
+private void calculatePenalties() {
+    String sqlQuery = "SELECT bb.br_id, b.br_name, bb.b_id, bk.b_title " +
+                      "FROM tbl_borrowed bb " +
+                      "JOIN tbl_borrowers b ON bb.br_id = b.br_id " +
+                      "JOIN tbl_books bk ON bb.b_id = bk.b_id";
+
+    try (Connection conn = dbConfig.connectDB();
+         PreparedStatement pstmt = conn.prepareStatement(sqlQuery);
+         ResultSet rs = pstmt.executeQuery()) {
+        
+        while (rs.next()) {
+            int borrowerId = rs.getInt("br_id");
+            String borrowerName = rs.getString("br_name");
+            int bookId = rs.getInt("b_id");
+            String bookTitle = rs.getString("b_title");
+
+            
+            int overdueDays = calculateOverdueDays(borrowerId, bookId);
+            if (overdueDays > 0) {
+                double penaltyAmount = overdueDays * 0.50; // Example sa penalty rate gema gema rani sir
+
+                
+                String penaltySql = "INSERT INTO tbl_penalties (br_id, b_id, penalty_amount, date_assigned, penalty_status) " +
+                                    "VALUES (?, ?, ?, CURRENT_TIMESTAMP, 'overdue') " +
+                                    "ON CONFLICT(br_id, b_id) DO UPDATE SET penalty_amount = penalty_amount + excluded.penalty_amount";
+                try (PreparedStatement penaltyStmt = conn.prepareStatement(penaltySql)) {
+                    penaltyStmt.setInt(1, borrowerId);
+                    penaltyStmt.setInt(2, bookId);
+                    penaltyStmt.setDouble(3, penaltyAmount);
+                    penaltyStmt.executeUpdate();
+                }
+
+                System.out.println("Penalty of " + penaltyAmount + " assigned to " + borrowerName + " for book: " + bookTitle);
+            }
+        }
+    } catch (SQLException e) {
+        System.out.println("Error calculating penalties: " + e.getMessage());
+    }
+}
+
+private int calculateOverdueDays(int borrowerId, int bookId) {
+    
+    final int BORROW_DURATION = 14; 
+
+    
+   
+    int simulatedBorrowedDays = 20; 
+
+    
+    if (simulatedBorrowedDays > BORROW_DURATION) {
+        return simulatedBorrowedDays - BORROW_DURATION;
+    }
+    
+    return 0; 
+}
+
+private void viewPenalties() {
+    String sqlQuery = "SELECT p.penalty_id, p.br_id, b.br_name, p.b_id, bk.b_title, p.penalty_amount, p.date_assigned, p.penalty_status " +
+                      "FROM tbl_penalties p " +
+                      "JOIN tbl_borrowers b ON p.br_id = b.br_id " +
+                      "JOIN tbl_books bk ON p.b_id = bk.b_id";
+
+    try (Connection conn = dbConfig.connectDB();
+         PreparedStatement pstmt = conn.prepareStatement(sqlQuery);
+         ResultSet rs = pstmt.executeQuery()) {
+        
+        
+        System.out.printf("%-12s %-10s %-20s %-10s %-30s %-15s %-20s %-15s%n", 
+                          "Penalty ID", "Borrower ID", "Borrower Name", "Book ID", "Book Title", "Penalty Amount", "Date Assigned", "Status");
+        System.out.println(new String(new char[140]).replace('\0', '-')); 
+
+        while (rs.next()) {
+            int penaltyId = rs.getInt("penalty_id");
+            int borrowerId = rs.getInt("br_id");
+            String borrowerName = rs.getString("br_name");
+            int bookId = rs.getInt("b_id");
+            String bookTitle = rs.getString("b_title");
+            double penaltyAmount = rs.getDouble("penalty_amount");
+            String dateAssigned = rs.getString("date_assigned");
+            String penaltyStatus = rs.getString("penalty_status");
+
+           
+            System.out.printf("%-12d %-10d %-20s %-10d %-30s %-15.2f %-20s %-15s%n", 
+                              penaltyId, borrowerId, borrowerName, bookId, bookTitle, penaltyAmount, dateAssigned, penaltyStatus);
+        }
+    } catch (SQLException e) {
+        System.out.println("Error viewing penalties: " + e.getMessage());
+    }
+}
+
+
     public void mainMenu() {
     int choice;
     do {
@@ -393,12 +508,14 @@ private int getValidIntegerInput(String prompt) {
         System.out.println("2. Borrowers                              |");  
         System.out.println("3. Borrow Book                            |"); 
         System.out.println("4. Return Book                            |"); 
-        System.out.println("5. Display Borrowers with borrowed Books  |");
-        System.out.println("6. Display Books  Availability            |"); 
-        System.out.println("7. Exit                                   |");
+        System.out.println("5. Borrowers who borrowed Books           |");
+        System.out.println("6. Books Availability                     |"); 
+        System.out.println("7. Calculate Penalties(optional)          |");
+        System.out.println("8. View Penalties                         |");
+        System.out.println("0. Exit                                   |");
         System.out.println("-------------------------------------------");
         System.out.print("Enter your choice:                        |\n");
-        System.out.println("-------------------------------------------");
+        
         choice = scanner.nextInt();
 
         if (choice == 1) {
@@ -416,7 +533,12 @@ private int getValidIntegerInput(String prompt) {
         } else if (choice == 6) { 
             displayBooksWithAvailability();
         }
-    } while (choice != 7);
+        if (choice == 7) {
+            calculatePenalties(); 
+        } else if (choice == 8) {
+            viewPenalties(); 
+        }
+    } while (choice != 0);
 
     System.out.println("Exiting... Salamat po mwaa!");
     scanner.close();
