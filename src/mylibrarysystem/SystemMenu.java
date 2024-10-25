@@ -5,69 +5,109 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class SystemMenu {
     private Scanner scanner = new Scanner(System.in);
     private config dbConfig = new config(); 
 
-    public void borrowerMenu() {
-        int choice;
-        do {
-            System.out.println("----------- Borrower Menu -----------");
-            System.out.println("1. Register Borrower                  |");
-            System.out.println("2. View Borrowers                     |");
-            System.out.println("3. Update Borrower                    |");
-            System.out.println("4. Delete Borrower                    |");
-            System.out.println("5. Back to Main Menu                  |");
-            System.out.println("-------------------------------------");
-            System.out.print("Enter your choice:                  |\n");
-            
-            choice = scanner.nextInt();
-            scanner.nextLine(); 
+   public void borrowerMenu() {
+    int choice = -1; 
+    Scanner scanner = new Scanner(System.in);
+
+    do {
+        System.out.println("----------- Borrower Menu -----------");
+        System.out.println("1. Register Borrower                  |");
+        System.out.println("2. View Borrowers                     |");
+        System.out.println("3. Update Borrower                    |");
+        System.out.println("4. Delete Borrower                    |");
+        System.out.println("5. Back to Main Menu                  |");
+        System.out.println("-------------------------------------");
+        System.out.print("Enter your choice:                  |\n");
 
         
-            if (choice == 1) {
+        while (true) {
+            try {
+                choice = scanner.nextInt();
+                if (choice < 1 || choice > 5) {
+                    System.out.println("Invalid choice. Please enter a number between 1 and 5.");
+                } else {
+                    break; 
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter an integer.");
+                scanner.next(); 
+            }
+        }
+
+        switch (choice) {
+            case 1:
                 addBorrower();
-            } else if (choice == 2) {
+                break;
+            case 2:
                 viewBorrowers();
-            } else if (choice == 3) {
+                break;
+            case 3:
                 viewBorrowers();
                 updateBorrower();
                 viewBorrowers();
-            } else if (choice == 4) {
+                break;
+            case 4:
                 deleteBorrower();
+                break;
+        }
+    } while (choice != 5);
+}
+
+ 
+public void bookMenu() {
+    int choice = -1; 
+    Scanner scanner = new Scanner(System.in);
+
+    do {
+        System.out.println("----------- Book Menu -----------");
+        System.out.println("1. Add Book                     |");
+        System.out.println("2. View Books                   |");
+        System.out.println("3. Update Book                  |");
+        System.out.println("4. Delete Book                  |");
+        System.out.println("5. Back to Main Menu            |");
+        System.out.println("---------------------------------");
+        System.out.print("Enter your choice:              |\n");
+
+       
+        while (true) {
+            try {
+                choice = scanner.nextInt();
+                if (choice < 1 || choice > 5) {
+                    System.out.println("Invalid choice. Please enter a number between 1 and 5.");
+                } else {
+                    break; 
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter an integer.");
+                scanner.next(); 
             }
-        } while (choice != 5);
-    }
+        }
 
-    public void bookMenu() {
-        int choice;
-        do {
-            System.out.println("----------- Book Menu -----------");
-            System.out.println("1. Add Book                     |");
-            System.out.println("2. View Books                   |");
-            System.out.println("3. Update Book                    |");
-            System.out.println("4. Delete Book                  |");
-            System.out.println("5. Back to Main Menu            |");
-            System.out.println("---------------------------------");
-            System.out.print("Enter your choice:              |\n");
-            choice = scanner.nextInt();
-            scanner.nextLine(); 
-
-            if (choice == 1) {
+        switch (choice) {
+            case 1:
                 addBook();
-            } else if (choice == 2) {
+                break;
+            case 2:
                 viewBooks();
-            } else if (choice == 3) {
+                break;
+            case 3:
                 viewBooks();
                 updateBook();
                 viewBooks();
-            } else if (choice == 4) {
+                break;
+            case 4:
                 deleteBook();
-            }
-        } while (choice != 5);
-    }
+                break;
+        }
+    } while (choice != 5);
+}
 
     private void addBorrower() {
     int borrowerId;
@@ -500,8 +540,12 @@ private void viewPenalties() {
 }
 
 
-    public void mainMenu() {
-    int choice;
+
+
+public void mainMenu() {
+    int choice = -1; 
+    Scanner scanner = new Scanner(System.in);
+
     do {
         System.out.println("----------------  Library  ----------------");
         System.out.println("1. Books                                  |");
@@ -515,28 +559,49 @@ private void viewPenalties() {
         System.out.println("0. Exit                                   |");
         System.out.println("-------------------------------------------");
         System.out.print("Enter your choice:                        |\n");
-        
-        choice = scanner.nextInt();
 
-        if (choice == 1) {
-            bookMenu();
-        } else if (choice == 2) {
-            borrowerMenu();
-        } else if (choice == 3) {
-            displayBooksWithAvailability();
-            borrowBook(); 
-        } else if (choice == 4) {
-            displayBorrowedBooksWithNames(); 
-            returnBook(); 
-        } else if (choice == 5) {
-            displayBorrowedBooksWithNames(); 
-        } else if (choice == 6) { 
-            displayBooksWithAvailability();
+        
+        while (true) {
+            try {
+                choice = scanner.nextInt();
+                if (choice < 0 || choice > 8) {
+                    System.out.println("Invalid choice. Please enter a number between 0 and 8.");
+                } else {
+                    break; 
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input. Please enter an integer.");
+                scanner.next(); 
+            }
         }
-        if (choice == 7) {
-            calculatePenalties(); 
-        } else if (choice == 8) {
-            viewPenalties(); 
+
+        switch (choice) {
+            case 1:
+                bookMenu();
+                break;
+            case 2:
+                borrowerMenu();
+                break;
+            case 3:
+                displayBooksWithAvailability();
+                borrowBook(); 
+                break;
+            case 4:
+                displayBorrowedBooksWithNames(); 
+                returnBook(); 
+                break;
+            case 5:
+                displayBorrowedBooksWithNames(); 
+                break;
+            case 6: 
+                displayBooksWithAvailability();
+                break;
+            case 7:
+                calculatePenalties(); 
+                break;
+            case 8:
+                viewPenalties(); 
+                break;
         }
     } while (choice != 0);
 
