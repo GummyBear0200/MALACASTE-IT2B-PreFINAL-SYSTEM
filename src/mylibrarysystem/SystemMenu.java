@@ -4,34 +4,42 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class SystemMenu {
-    private Scanner scanner = new Scanner(System.in);
+   private Scanner scanner = new Scanner(System.in);
     private config dbConfig = new config(); 
-
-   public void borrowerMenu() {
+    
+     private BookMenu bookMenu = new BookMenu();
+     private BorrowerMenu borrowerMenu = new BorrowerMenu();
+public void mainMenu() {
     int choice = -1; 
     Scanner scanner = new Scanner(System.in);
 
     do {
-        System.out.println("----------- Borrower Menu -----------");
-        System.out.println("1. Register Borrower                  |");
-        System.out.println("2. View Borrowers                     |");
-        System.out.println("3. Update Borrower                    |");
-        System.out.println("4. Delete Borrower                    |");
-        System.out.println("5. Back to Main Menu                  |");
-        System.out.println("-------------------------------------");
-        System.out.print("Enter your choice:                  |\n");
+        System.out.println("---------------   Library   ---------------");
+        System.out.println("1. Books                                  |");
+        System.out.println("2. Borrowers                              |");     
+        System.out.println("---------------  Functions  ---------------");
+        System.out.println("3. Borrow Book                            |"); 
+        System.out.println("4. Return Book                            |"); 
+        System.out.println("5. Assign Penalties                       |");
+        System.out.println("---------------   Reports   ---------------");
+        System.out.println("6. Borrowed Books                         |");
+        System.out.println("7. Books Availability                     |");     
+        System.out.println("8. View Penalties                         |");
+        System.out.println("-------------------------------------------");
+        System.out.println("0. Exit                                   |");
+        System.out.println("-------------------------------------------");
+        System.out.print("Enter your choice:                        |\n");
 
         
         while (true) {
             try {
                 choice = scanner.nextInt();
-                if (choice < 1 || choice > 5) {
-                    System.out.println("Invalid choice. Please enter a number between 1 and 5.");
+                if (choice < 0 || choice > 8) {
+                    System.out.println("Invalid choice. Please enter a number between 0 and 8.");
                 } else {
                     break; 
                 }
@@ -41,270 +49,43 @@ public class SystemMenu {
             }
         }
 
-        switch (choice) {
-            case 1:
-                addBorrower();
-                break;
-            case 2:
-                viewBorrowers();
-                break;
-            case 3:
-                viewBorrowers();
-                updateBorrower();
-                viewBorrowers();
-                break;
-            case 4:
-                deleteBorrower();
-                break;
-        }
-    } while (choice != 5);
-}
-
- 
-public void bookMenu() {
-    int choice = -1; 
-    Scanner scanner = new Scanner(System.in);
-
-    do {
-        System.out.println("----------- Book Menu -----------");
-        System.out.println("1. Add Book                     |");
-        System.out.println("2. View Books                   |");
-        System.out.println("3. Update Book                  |");
-        System.out.println("4. Delete Book                  |");
-        System.out.println("5. Back to Main Menu            |");
-        System.out.println("---------------------------------");
-        System.out.print("Enter your choice:              |\n");
-
-       
-        while (true) {
-            try {
-                choice = scanner.nextInt();
-                if (choice < 1 || choice > 5) {
-                    System.out.println("Invalid choice. Please enter a number between 1 and 5.");
-                } else {
-                    break; 
-                }
-            } catch (InputMismatchException e) {
-                System.out.println("Invalid input. Please enter an integer.");
-                scanner.next(); 
+       switch (choice) {
+                case 1:
+                     bookMenu.bookMenu();
+                    break;
+                case 2:
+                     borrowerMenu.borrowerMenu();
+                    break;
+                case 3:
+                    displayBooksWithAvailability();
+                     
+                    borrowBook(); 
+                    break;
+                case 4:
+                    displayBorrowedBooksWithNames(); 
+                    returnBook(); 
+                    break;
+                case 5:
+                    displayBorrowedBooksWithNames(); 
+                    calculatePenalties(); 
+                    break;
+                case 6: 
+                    displayBorrowedBooksWithNames(); 
+                    break;
+                case 7:                   
+                    displayBooksWithAvailability();
+                    
+                    break;
+                case 8:
+                    viewPenalties(); 
+                    break;
             }
-        }
+    } while (choice != 0);
 
-        switch (choice) {
-            case 1:
-                addBook();
-                break;
-            case 2:
-                viewBooks();
-                break;
-            case 3:
-                viewBooks();
-                updateBook();
-                viewBooks();
-                break;
-            case 4:
-                deleteBook();
-                break;
-        }
-    } while (choice != 5);
+    System.out.println("Exiting... Salamat po mwaa!");
+    scanner.close();
 }
-
-    private void addBorrower() {
-    int borrowerId;
-
-    while (true) {
-        borrowerId = getValidIntegerInput("Enter Borrower ID: ");
-        
-        if (!idExists("tbl_borrowers", "br_id", borrowerId)) {
-            break; 
-        }
-
-        System.out.println("Borrower ID already exists. Please enter a different ID.");
-    }
-
-    System.out.print("Enter Borrower Name: ");
-    String name = scanner.nextLine().trim();
-    if (name.isEmpty()) {
-        System.out.println("Borrower name cannot be empty.");
-        return;
-    }
-
-    String sql = "INSERT INTO tbl_borrowers (br_id, br_name) VALUES (?, ?)";
-    dbConfig.addRecord(sql, borrowerId, name);
-    System.out.println("Borrower added successfully.");
-}
-
-    private void viewBorrowers() {
-        String sqlQuery = "SELECT * FROM tbl_borrowers";
-        String[] columnHeaders = {"Borrower ID", "Name"};
-        String[] columnNames = {"br_id", "br_name"};
-        dbConfig.viewRecords(sqlQuery, columnHeaders, columnNames);
-    }
-
-    private void updateBorrower() {
-    int borrowerId;
-
-    while (true) {
-        borrowerId = getValidIntegerInput("Enter Borrower ID to edit: ");
-        
-        if (idExists("tbl_borrowers", "br_id", borrowerId)) {
-            break; 
-        }
-
-        System.out.println("Borrower ID does not exist. Please enter again.");
-    }
-
-    System.out.print("Enter new name: ");
-    String newName = scanner.nextLine().trim();
-    if (newName.isEmpty()) {
-        System.out.println("New name cannot be empty.");
-        return;
-    }
-
-    String sql = "UPDATE tbl_borrowers SET br_name = ? WHERE br_id = ?";
-    dbConfig.addRecord(sql, newName, borrowerId);
-    System.out.println("Borrower updated successfully.");
-}
-
-    private void deleteBorrower() {
-    int borrowerId;
-
-    while (true) {
-        borrowerId = getValidIntegerInput("Enter Borrower ID to delete: ");
-        
-        if (idExists("tbl_borrowers", "br_id", borrowerId)) {
-            break; 
-        }
-
-        System.out.println("Borrower ID does not exist. Please enter again.");
-    }
-
-    System.out.print("Are you sure you want to delete this borrower? (yes/no): ");
-    String confirmation = scanner.nextLine();
-    
-    if (!confirmation.equalsIgnoreCase("yes")) {
-        System.out.println("Deletion cancelled.");
-        return;
-    }
-
-    String sql = "DELETE FROM tbl_borrowers WHERE br_id = ?";
-    dbConfig.addRecord(sql, borrowerId);
-    System.out.println("Borrower deleted successfully.");
-}
-
-    private void addBook() {
-    int bookId;
-
-    while (true) {
-        bookId = getValidIntegerInput("Enter Book ID: ");
-        
-        if (!idExists("tbl_books", "b_id", bookId)) {
-            break; 
-        }
-
-        System.out.println("Book ID already exists. Please enter a different ID.");
-    }
-
-    System.out.print("Enter Book Title: ");
-    String title = scanner.nextLine().trim();
-    if (title.isEmpty()) {
-        System.out.println("Book title cannot be empty.");
-        return;
-    }
-
-    System.out.print("Enter Author: ");
-    String author = scanner.nextLine().trim();
-    if (author.isEmpty()) {
-        System.out.println("Author name cannot be empty.");
-        return;
-    }
-
-    String sql = "INSERT INTO tbl_books (b_id, b_title, b_author) VALUES (?, ?, ?)";
-    dbConfig.addRecord(sql, bookId, title, author);
-    System.out.println("Book added successfully.");
-}
-
-    private boolean idExists(String tableName, String columnName, int id) {
-    String sqlQuery = "SELECT COUNT(*) FROM " + tableName + " WHERE " + columnName + " = ?";
-    try (Connection conn = dbConfig.connectDB();
-         PreparedStatement pstmt = conn.prepareStatement(sqlQuery)) {
-        pstmt.setInt(1, id);
-        ResultSet rs = pstmt.executeQuery();
-        if (rs.next()) {
-            return rs.getInt(1) > 0; 
-        }
-    } catch (SQLException e) {
-        System.out.println("Error checking ID existence: " + e.getMessage());
-    }
-    return false; 
-}
-    
-    private void viewBooks() {
-        String sqlQuery = "SELECT * FROM tbl_books";
-        String[] columnHeaders = {"Book ID", "Title", "Author"};
-        String[] columnNames = {"b_id", "b_title", "b_author"};
-        dbConfig.viewRecords(sqlQuery, columnHeaders, columnNames);
-    }
-
-    private void updateBook() {
-    int bookId;
-    
-    while (true) {
-        bookId = getValidIntegerInput("Enter Book ID to edit: ");
-
-        if (idExists("tbl_books", "b_id", bookId)) {
-            break; 
-        }
-
-        System.out.println("Book ID does not exist. Please enter again.");
-    }
-
-    System.out.print("Enter new title: ");
-    String newTitle = scanner.nextLine().trim();
-    if (newTitle.isEmpty()) {
-        System.out.println("New title cannot be empty.");
-        return;
-    }
-
-    System.out.print("Enter new author: ");
-    String newAuthor = scanner.nextLine().trim();
-    if (newAuthor.isEmpty()) {
-        System.out.println("New author name cannot be empty.");
-        return;
-    }
-
-    String sql = "UPDATE tbl_books SET b_title = ?, b_author = ? WHERE b_id = ?";
-    dbConfig.addRecord(sql, newTitle, newAuthor, bookId);
-    System.out.println("Book updated successfully.");
-}
-
-    private void deleteBook() {
-    int bookId;
-
-    while (true) {
-        bookId = getValidIntegerInput("Enter Book ID to delete: ");
-        
-        if (idExists("tbl_books", "b_id", bookId)) {
-            break; 
-        }
-
-        System.out.println("Book ID does not exist. Please enter again.");
-    }
-
-    System.out.print("Are you sure you want to delete this book? (yes/no): ");
-    String confirmation = scanner.nextLine();
-    
-    if (!confirmation.equalsIgnoreCase("yes")) {
-        System.out.println("Deletion cancelled.");
-        return;
-    }
-
-    String sql = "DELETE FROM tbl_books WHERE b_id = ?";
-    dbConfig.addRecord(sql, bookId);
-    System.out.println("Book deleted successfully.");
-}
-
-    private void borrowBook() {
+  private void borrowBook() {
     System.out.print("Enter Borrower ID: ");
     int borrowerId = scanner.nextInt();
     scanner.nextLine(); 
@@ -313,26 +94,27 @@ public void bookMenu() {
     int bookId = scanner.nextInt();
     scanner.nextLine(); 
 
-    
+    System.out.print("Enter Borrow Days: ");
+    int borrowDays = scanner.nextInt();
+    scanner.nextLine();
+
     if (!idExists("tbl_borrowers", "br_id", borrowerId)) {
         System.out.println("Borrower ID does not exist.");
         return;
     }
 
-   
     if (!idExists("tbl_books", "b_id", bookId)) {
         System.out.println("Book ID does not exist.");
         return;
     }
 
-    
-    String checkBorrowedSql = "SELECT COUNT(*) FROM tbl_borrowed WHERE b_id = ?";
+    String checkBorrowedSql = "SELECT COUNT(*) FROM tbl_borrowedbooks WHERE b_id = ?";
     try (Connection conn = dbConfig.connectDB();
          PreparedStatement pstmt = conn.prepareStatement(checkBorrowedSql)) {
         pstmt.setInt(1, bookId);
         ResultSet rs = pstmt.executeQuery();
         if (rs.next() && rs.getInt(1) > 0) {
-            System.out.println("Book not available, This book is already borrowed by another borrower.");
+            System.out.println("Book not available. This book is already borrowed by another borrower.");
             return;
         }
     } catch (SQLException e) {
@@ -340,11 +122,34 @@ public void bookMenu() {
         return;
     }
 
-    
-    String sql = "INSERT INTO tbl_borrowed (br_id, b_id) VALUES (?, ?)";
-    dbConfig.addRecord(sql, borrowerId, bookId);
+    String sql = "INSERT INTO tbl_borrowedbooks (br_id, b_id, date_borrowed, borrow_days, b_status) VALUES (?, ?, CURRENT_TIMESTAMP, ?, 'active')";
+    dbConfig.addRecord(sql, borrowerId, bookId, borrowDays);
     System.out.println("Book borrowed successfully.");
+
+    
+    checkAndUpdateOverdueStatus(borrowerId, bookId, borrowDays);
 }
+
+private void checkAndUpdateOverdueStatus(int borrowerId, int bookId, int borrowDays) {
+    String updateStatusSql = "UPDATE tbl_borrowedbooks SET b_status = 'overdue' " +
+                              "WHERE br_id = ? AND b_id = ? AND julianday('now') - julianday(date_borrowed) > ?";
+
+    try (Connection conn = dbConfig.connectDB();
+         PreparedStatement pstmt = conn.prepareStatement(updateStatusSql)) {
+        pstmt.setInt(1, borrowerId);
+        pstmt.setInt(2, bookId);
+        pstmt.setInt(3, borrowDays);
+        int rowsUpdated = pstmt.executeUpdate();
+        
+        if (rowsUpdated > 0) {
+            System.out.println("Borrowed book status updated to overdue.");
+        }
+    } catch (SQLException e) {
+        System.out.println("Error updating borrowed book status: " + e.getMessage());
+    }
+}
+
+
 
 private void returnBook() {
     System.out.print("Enter Borrower ID: ");
@@ -355,20 +160,17 @@ private void returnBook() {
     int bookId = scanner.nextInt();
     scanner.nextLine(); 
 
-   
     if (!idExists("tbl_borrowers", "br_id", borrowerId)) {
         System.out.println("Borrower ID does not exist.");
         return;
     }
 
-    
     if (!idExists("tbl_books", "b_id", bookId)) {
         System.out.println("Book ID does not exist.");
         return;
     }
 
-    
-    String checkSql = "SELECT COUNT(*) FROM tbl_borrowed WHERE br_id = ? AND b_id = ?";
+    String checkSql = "SELECT COUNT(*) FROM tbl_borrowedbooks WHERE br_id = ? AND b_id = ?";
     try (Connection conn = dbConfig.connectDB();
          PreparedStatement pstmt = conn.prepareStatement(checkSql)) {
         pstmt.setInt(1, borrowerId);
@@ -384,46 +186,48 @@ private void returnBook() {
     }
 
    
-    String sql = "DELETE FROM tbl_borrowed WHERE br_id = ? AND b_id = ?";
+    String sql = "DELETE FROM tbl_borrowedbooks WHERE br_id = ? AND b_id = ?";
     dbConfig.addRecord(sql, borrowerId, bookId);
     System.out.println("Book returned successfully.");
 
    
-    updatePenalties(borrowerId, bookId);
-}
-private void updatePenalties(int borrowerId, int bookId) {
-    String updatePenaltySql = "UPDATE tbl_penalties SET penalty_status = 'resolved', penalty_amount = 0 " +
+    String updatePenaltySql = "UPDATE tbl_penalties SET penalty_status = 'resolved' " +
                                "WHERE br_id = ? AND b_id = ? AND penalty_status = 'overdue'";
-
     try (Connection conn = dbConfig.connectDB();
          PreparedStatement pstmt = conn.prepareStatement(updatePenaltySql)) {
         pstmt.setInt(1, borrowerId);
         pstmt.setInt(2, bookId);
-        int updatedRows = pstmt.executeUpdate();
-        if (updatedRows > 0) {
-            System.out.println("Penalties updated successfully.");
+        int rowsUpdated = pstmt.executeUpdate();
+        
+        if (rowsUpdated > 0) {
+            System.out.println("Penalty status updated to resolved.");
         } else {
-            System.out.println("No penalties to update for this book and borrower.");
+            System.out.println("No penalties to resolve for this return.");
         }
     } catch (SQLException e) {
-        System.out.println("Error updating penalties: " + e.getMessage());
+        System.out.println("Error updating penalty status: " + e.getMessage());
     }
 }
-   private void displayBorrowedBooksWithNames() {
-    String sqlQuery = "SELECT bb.br_id, b.br_name AS borrower_name, bb.b_id, bk.b_title AS book_title " +
-                      "FROM tbl_borrowed bb " +
+
+
+  private void displayBorrowedBooksWithNames() {
+    String sqlQuery = "SELECT bb.br_id, b.br_name AS borrower_name, bb.b_id, bk.b_title AS book_title, " +
+                      "bb.date_borrowed, bb.borrow_days, bb.b_status " +
+                      "FROM tbl_borrowedbooks bb " +
                       "JOIN tbl_borrowers b ON bb.br_id = b.br_id " +
                       "JOIN tbl_books bk ON bb.b_id = bk.b_id";
 
-    String[] columnHeaders = {"Borrower ID", "Borrower Name", "Book ID", "Book Title"};
-    String[] columnNames = {"br_id", "borrower_name", "b_id", "book_title"};
+    String[] columnHeaders = {"Borrower ID", "Borrower Name", "Book ID", "Book Title", "Date Borrowed", "Borrow Days", "Status"};
+    String[] columnNames = {"br_id", "borrower_name", "b_id", "book_title", "date_borrowed", "borrow_days", "b_status"};
     dbConfig.viewRecords(sqlQuery, columnHeaders, columnNames);
 }
+
+
 private void displayBooksWithAvailability() {
     String sqlQuery = "SELECT b.b_id, b.b_title, b.b_author, " +
                       "CASE WHEN bb.b_id IS NULL THEN 'Available' ELSE 'Not Available' END AS availability " +
                       "FROM tbl_books b " +
-                      "LEFT JOIN tbl_borrowed bb ON b.b_id = bb.b_id";
+                      "LEFT JOIN tbl_borrowedbooks bb ON b.b_id = bb.b_id";
 
     String[] columnHeaders = {"Book ID", "Title", "Author", "Availability"};
     String[] columnNames = {"b_id", "b_title", "b_author", "availability"};
@@ -450,44 +254,51 @@ private int getValidIntegerInput(String prompt) {
 
 
 private void calculatePenalties() {
-    String sqlQuery = "SELECT bb.br_id, b.br_name, bb.b_id, bk.b_title " +
-                      "FROM tbl_borrowed bb " +
-                      "JOIN tbl_borrowers b ON bb.br_id = b.br_id " +
-                      "JOIN tbl_books bk ON bb.b_id = bk.b_id";
+    System.out.print("Enter Borrower ID to assign penalties: ");
+    int borrowerId = scanner.nextInt();
+    scanner.nextLine(); 
+
+    String sqlQuery = "SELECT bb.b_id, bk.b_title " +
+                      "FROM tbl_borrowedbooks bb " +
+                      "JOIN tbl_books bk ON bb.b_id = bk.b_id " +
+                      "WHERE bb.br_id = ?";
 
     try (Connection conn = dbConfig.connectDB();
-         PreparedStatement pstmt = conn.prepareStatement(sqlQuery);
-         ResultSet rs = pstmt.executeQuery()) {
+         PreparedStatement pstmt = conn.prepareStatement(sqlQuery)) {
+        pstmt.setInt(1, borrowerId);
+        ResultSet rs = pstmt.executeQuery();
         
+        boolean hasOverdueBooks = false;
+
         while (rs.next()) {
-            int borrowerId = rs.getInt("br_id");
-            String borrowerName = rs.getString("br_name");
             int bookId = rs.getInt("b_id");
             String bookTitle = rs.getString("b_title");
 
-            
             int overdueDays = calculateOverdueDays(borrowerId, bookId);
             if (overdueDays > 0) {
-                double penaltyAmount = overdueDays * 0.50; // Example sa penalty rate gema gema rani sir
+                hasOverdueBooks = true;
 
-                
-                String penaltySql = "INSERT INTO tbl_penalties (br_id, b_id, penalty_amount, date_assigned, penalty_status) " +
-                                    "VALUES (?, ?, ?, CURRENT_TIMESTAMP, 'overdue') " +
-                                    "ON CONFLICT(br_id, b_id) DO UPDATE SET penalty_amount = penalty_amount + excluded.penalty_amount";
+                String penaltySql = "INSERT INTO tbl_penalties (br_id, b_id, date_assigned, penalty_status) " +
+                                    "VALUES (?, ?, CURRENT_TIMESTAMP, 'overdue')";
+                                   
                 try (PreparedStatement penaltyStmt = conn.prepareStatement(penaltySql)) {
                     penaltyStmt.setInt(1, borrowerId);
                     penaltyStmt.setInt(2, bookId);
-                    penaltyStmt.setDouble(3, penaltyAmount);
                     penaltyStmt.executeUpdate();
                 }
 
-                System.out.println("Penalty of " + penaltyAmount + " assigned to " + borrowerName + " for book: " + bookTitle);
+                System.out.println("Penalty assigned to Borrower ID: " + borrowerId + " for book: " + bookTitle);
             }
+        }
+
+        if (!hasOverdueBooks) {
+            System.out.println("No overdue books found for Borrower ID: " + borrowerId);
         }
     } catch (SQLException e) {
         System.out.println("Error calculating penalties: " + e.getMessage());
     }
 }
+
 
 private int calculateOverdueDays(int borrowerId, int bookId) {
     
@@ -506,7 +317,7 @@ private int calculateOverdueDays(int borrowerId, int bookId) {
 }
 
 private void viewPenalties() {
-    String sqlQuery = "SELECT p.penalty_id, p.br_id, b.br_name, p.b_id, bk.b_title, p.penalty_amount, p.date_assigned, p.penalty_status " +
+    String sqlQuery = "SELECT p.penalty_id, p.br_id, b.br_name, p.b_id, bk.b_title, p.date_assigned, p.penalty_status " +
                       "FROM tbl_penalties p " +
                       "JOIN tbl_borrowers b ON p.br_id = b.br_id " +
                       "JOIN tbl_books bk ON p.b_id = bk.b_id";
@@ -515,10 +326,9 @@ private void viewPenalties() {
          PreparedStatement pstmt = conn.prepareStatement(sqlQuery);
          ResultSet rs = pstmt.executeQuery()) {
         
-        
-        System.out.printf("%-12s %-10s %-20s %-10s %-30s %-15s %-20s %-15s%n", 
-                          "Penalty ID", "Borrower ID", "Borrower Name", "Book ID", "Book Title", "Penalty Amount", "Date Assigned", "Status");
-        System.out.println(new String(new char[140]).replace('\0', '-')); 
+        System.out.printf("%-12s %-10s %-20s %-10s %-30s %-20s %-15s%n", 
+                          "Penalty ID", "Borrower ID", "Borrower Name", "Book ID", "Book Title", "Date Assigned", "Status");
+        System.out.println(new String(new char[130]).replace('\0', '-')); 
 
         while (rs.next()) {
             int penaltyId = rs.getInt("penalty_id");
@@ -526,86 +336,63 @@ private void viewPenalties() {
             String borrowerName = rs.getString("br_name");
             int bookId = rs.getInt("b_id");
             String bookTitle = rs.getString("b_title");
-            double penaltyAmount = rs.getDouble("penalty_amount");
             String dateAssigned = rs.getString("date_assigned");
             String penaltyStatus = rs.getString("penalty_status");
 
-           
-            System.out.printf("%-12d %-10d %-20s %-10d %-30s %-15.2f %-20s %-15s%n", 
-                              penaltyId, borrowerId, borrowerName, bookId, bookTitle, penaltyAmount, dateAssigned, penaltyStatus);
+            System.out.printf("%-12d %-10d %-20s %-10d %-30s %-20s %-15s%n", 
+                              penaltyId, borrowerId, borrowerName, bookId, bookTitle, dateAssigned, penaltyStatus);
         }
     } catch (SQLException e) {
         System.out.println("Error viewing penalties: " + e.getMessage());
+        return;
+    }
+
+    
+    System.out.print("Do you want to clear the record? (yes/no): ");
+    String response = scanner.nextLine().trim().toLowerCase();
+
+    if (response.equals("yes")) {
+        System.out.print("Enter the Penalty ID to clear: ");
+        int penaltyIdToClear = scanner.nextInt();
+        scanner.nextLine(); 
+
+       
+        String deleteSql = "DELETE FROM tbl_penalties WHERE penalty_id = ?";
+        try (Connection conn = dbConfig.connectDB();
+             PreparedStatement pstmt = conn.prepareStatement(deleteSql)) {
+            pstmt.setInt(1, penaltyIdToClear);
+            int rowsAffected = pstmt.executeUpdate();
+            
+            if (rowsAffected > 0) {
+                System.out.println("Penalty record deleted successfully.");
+            } else {
+                System.out.println("No penalty record found with that ID.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error deleting penalty record: " + e.getMessage());
+        }
+    } else {
+        System.out.println("No records were cleared.");
     }
 }
 
 
-
-
-public void mainMenu() {
-    int choice = -1; 
-    Scanner scanner = new Scanner(System.in);
-
-    do {
-        System.out.println("----------------  Library  ----------------");
-        System.out.println("1. Books                                  |");
-        System.out.println("2. Borrowers                              |");  
-        System.out.println("3. Borrow Book                            |"); 
-        System.out.println("4. Return Book                            |"); 
-        System.out.println("5. Borrowers who borrowed Books           |");
-        System.out.println("6. Books Availability                     |"); 
-        System.out.println("7. Calculate Penalties(optional)          |");
-        System.out.println("8. View Penalties                         |");
-        System.out.println("0. Exit                                   |");
-        System.out.println("-------------------------------------------");
-        System.out.print("Enter your choice:                        |\n");
-
-        
-        while (true) {
-            try {
-                choice = scanner.nextInt();
-                if (choice < 0 || choice > 8) {
-                    System.out.println("Invalid choice. Please enter a number between 0 and 8.");
-                } else {
-                    break; 
-                }
-            } catch (InputMismatchException e) {
-                System.out.println("Invalid input. Please enter an integer.");
-                scanner.next(); 
-            }
+ private boolean idExists(String tableName, String columnName, int id) {
+    String sqlQuery = "SELECT COUNT(*) FROM " + tableName + " WHERE " + columnName + " = ?";
+    try (Connection conn = dbConfig.connectDB();
+         PreparedStatement pstmt = conn.prepareStatement(sqlQuery)) {
+        pstmt.setInt(1, id);
+        ResultSet rs = pstmt.executeQuery();
+        if (rs.next()) {
+            return rs.getInt(1) > 0; 
         }
-
-        switch (choice) {
-            case 1:
-                bookMenu();
-                break;
-            case 2:
-                borrowerMenu();
-                break;
-            case 3:
-                displayBooksWithAvailability();
-                borrowBook(); 
-                break;
-            case 4:
-                displayBorrowedBooksWithNames(); 
-                returnBook(); 
-                break;
-            case 5:
-                displayBorrowedBooksWithNames(); 
-                break;
-            case 6: 
-                displayBooksWithAvailability();
-                break;
-            case 7:
-                calculatePenalties(); 
-                break;
-            case 8:
-                viewPenalties(); 
-                break;
-        }
-    } while (choice != 0);
-
-    System.out.println("Exiting... Salamat po mwaa!");
-    scanner.close();
+    } catch (SQLException e) {
+        System.out.println("Error checking ID existence: " + e.getMessage());
+    }
+    return false; 
 }
+
+
+
+
 }
