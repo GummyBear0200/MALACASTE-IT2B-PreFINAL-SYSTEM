@@ -302,7 +302,7 @@ private void calculatePenalties() {
 
 private int calculateOverdueDays(int borrowerId, int bookId) {
     
-    final int BORROW_DURATION = 14; 
+    final int BORROW_DURATION = 14;
 
     
    
