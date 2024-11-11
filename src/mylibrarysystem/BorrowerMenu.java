@@ -117,7 +117,7 @@ private void addBorrower() {
 }
 
 
-  private void viewBorrowers() {
+  void viewBorrowers() {
     String sqlQuery = "SELECT br_id, br_name, br_cnumber, br_address FROM tbl_borrowers";
     String[] columnHeaders = {"Borrower ID", "Name", "Phone Number", "Address"};
     String[] columnNames = {"br_id", "br_name", "br_cnumber", "br_address"};
