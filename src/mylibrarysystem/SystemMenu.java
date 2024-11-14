@@ -22,6 +22,7 @@ public class SystemMenu {
      private BookMenu bookMenu = new BookMenu();
      private BorrowerMenu borrowerMenu = new BorrowerMenu();
      private BorrowerMenu viewBorrowers = new BorrowerMenu();
+     private BookMenu viewBooks = new BookMenu();
      private SingleReport specificReport = new SingleReport();
 public void mainMenu() {
     int choice = -1; 
@@ -148,11 +149,10 @@ public void mainMenu() {
 
 private void returnBook() {
     int borrowerId = getValidIntegerInput("Enter Borrower ID: ");
-    scanner.nextLine(); 
 
     System.out.print("Enter Book ID: ");
     int bookId = scanner.nextInt();
-    scanner.nextLine(); 
+    
 
     if (!idExists("tbl_borrowers", "br_id", borrowerId)) {
         System.out.println("Borrower ID does not exist.");
@@ -558,10 +558,6 @@ private void viewPenalties() {
         System.out.println("No records were cleared.");
     }
 }
-                         //--------------------------------------//
-                        //            SPECIFIC REPORT           //
-                       //--------------------------------------//
-
 
 
                          //--------------------------------------//

@@ -15,6 +15,10 @@ public class BookMenu {
     public void  bookMenu() {
     int choice = -1; 
     Scanner scanner = new Scanner(System.in);
+    
+                         //--------------------------------------//
+                        //              BOOK MENU               //
+                       //--------------------------------------//
 
     do {
         System.out.println("----------- Book Menu -----------");

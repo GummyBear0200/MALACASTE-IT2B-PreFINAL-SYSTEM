@@ -16,6 +16,9 @@ public class BorrowerMenu {
    public void borrowerMenu() {
     int choice = -1; 
     Scanner scanner = new Scanner(System.in);
+                         //--------------------------------------//
+                        //           BORROWER MENU              //
+                       //--------------------------------------//
 
     do {
         System.out.println("----------- Borrower Menu -----------");

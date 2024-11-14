@@ -13,6 +13,10 @@ public class SingleReport {
     private static BookMenu bookMenu = new BookMenu();
     private static BorrowerMenu borrowerMenu = new BorrowerMenu();
 
+                         //--------------------------------------//
+                        //            SPECIFIC REPORT           //
+                       //--------------------------------------//
+
     public static void specificReport() {
         System.out.println("\n--------------- Specific Report ---------------");
         System.out.println("Select a specific report:");
