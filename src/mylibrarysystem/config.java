@@ -7,11 +7,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class config {
-    // Method to connect to SQLite
+   
     public static Connection connectDB() {
         Connection con = null;
         try {
-            Class.forName("org.sqlite.JDBC"); // Load the SQLite JDBC driver
+            Class.forName("org.sqlite.JDBC"); 
             con = DriverManager.getConnection("jdbc:sqlite:systemfinal.db"); // Establish connection
             System.out.println("Connection Successful");
         } catch (Exception e) {

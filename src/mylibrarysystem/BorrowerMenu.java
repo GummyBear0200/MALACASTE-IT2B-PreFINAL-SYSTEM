@@ -183,6 +183,7 @@ private void deleteBorrower() {
         System.out.println("Deletion cancelled.");
         return;
     }
+  
 
     String sql = "DELETE FROM tbl_borrowers WHERE br_id = ?";
     dbConfig.addRecord(sql, borrowerId);

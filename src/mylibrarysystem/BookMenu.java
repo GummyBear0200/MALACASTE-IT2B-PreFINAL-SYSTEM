@@ -26,6 +26,7 @@ public class BookMenu {
         System.out.println("---------------------------------");
         System.out.print("Enter your choice:              |\n");
 
+      
        
         while (true) {
             try {
@@ -106,7 +107,7 @@ public class BookMenu {
     return false; 
 }
     
-    private void viewBooks() {
+    public void viewBooks() {
         String sqlQuery = "SELECT * FROM tbl_books";
         String[] columnHeaders = {"Book ID", "Title", "Author"};
         String[] columnNames = {"b_id", "b_title", "b_author"};
