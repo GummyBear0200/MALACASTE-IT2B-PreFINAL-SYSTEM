@@ -33,20 +33,19 @@ public void mainMenu() {
                         // HI sir welcome to my little system   //
                        //--------------------------------------//
     do {
-        System.out.println("---------------   Library   ---------------                                      | Choice Selection:                 ");
-        System.out.println(" Books                                  |                                        | Select 1 - 9 for various options  ");
-        System.out.println(" Borrowers                              |                                        | Select 0 for Exit                 ");
-        System.out.println("---------------  Functions  ---------------                                      | Still confused? Here's the Manual! ");
-        System.out.println(" Borrow Book                            |                                        | Manual:                           "); 
-        System.out.println(" Return Book                            |                                        | Select 1 - 2 for Library options "); 
-        System.out.println(" Assign Penalties                       |                                        | Select 3 - 5 for Functions       ");
-        System.out.println("---------------   Reports   ---------------                                      | Select 6 - 9 for Reports         ");
-        System.out.println(" Borrowed Books                         |");
-        System.out.println(" Books Availability                     |");     
-        System.out.println(" View Penalties                         |");
-        System.out.println(" Specific Report                        |");
+        System.out.println("---------------   Library   ---------------                                        | Choice Selection:                 ");
+        System.out.println(" 1.Books                                  |                                        | Select 1 - 9 for various options  ");
+        System.out.println(" 2.Borrowers                              |                                        | Select 0 for Exit                 ");
+        System.out.println("---------------  Functions  ---------------                                        | Still confused? Here's the Manual! ");
+        System.out.println(" 3.Borrow Book                            |                                        | Manual:                           "); 
+        System.out.println(" 4.Return Book                            |                                        | Select 1 - 2 for Library options ");                                        
+        System.out.println("---------------   Reports   ---------------                                        | Select 3 - 4 for Functions       ");                     
+        System.out.println(" 5.Borrowed Books                         |                                        | Select 5 - 8 for Reports         ");
+        System.out.println(" 6.Books Availability                     |");     
+        System.out.println(" 7.View Penalties                         |");
+        System.out.println(" 8.Specific Report                        |");
         System.out.println("-------------------------------------------");
-        System.out.println(" Exit                                   |");
+        System.out.println(" 0.Exit                                   |");
         System.out.println("-------------------------------------------");
         System.out.print("Enter your choice:                        |\n");
 
@@ -79,20 +78,17 @@ public void mainMenu() {
                 displayBorrowedBooksWithNames(); 
                 returnBook(); 
                 break;
-            case 5:
-                displayBorrowedBooksWithNames(); 
-                calculatePenalties(); 
-                break;
-            case 6: 
+            
+            case 5: 
                 displayBorrowedBooksWithNames(); 
                 break;
-            case 7:
+            case 6:
                 displayBooksWithAvailability();
                 break;
-            case 8:
+            case 7:
                 viewPenalties(); 
                 break;
-            case 9:
+            case 8:
                 SingleReport.specificReport(); 
                 break;
         }
@@ -206,7 +202,7 @@ private void returnBook() {
                         //--------------------------------------//
                         //      PARTS JAPUN NIS REPORTS        //
                        //--------------------------------------//
-  private void displayBorrowedBooksWithNames() {
+private void displayBorrowedBooksWithNames() {
     String sqlQuery = "SELECT bb.br_id, b.br_name AS borrower_name, bb.b_id, bk.b_title AS book_title, " +
                       "bb.date_borrowed, bb.borrow_days, bb.b_status, " +
                       "CASE WHEN julianday('now') > julianday(bb.date_borrowed) + bb.borrow_days THEN 'overdue' " +
@@ -244,14 +240,42 @@ private void returnBook() {
 
             System.out.printf("%-12d | %-15s | %-10d | %-20s | %-20s | %-12d | %-10s%n", 
                               borrowerId, borrowerName, bookId, bookTitle, dateBorrowed, borrowDays, status);
-            System.out.println("\n");
+            
+
+            
+            if ("overdue".equals(status)) {
+                String penaltyCheckQuery = "SELECT COUNT(*) FROM tbl_penalties WHERE br_id = ? AND b_id = ?";
+                String penaltyInsertQuery = "INSERT INTO tbl_penalties (br_id, b_id, date_assigned, penalty_status) " +
+                                             "VALUES (?, ?, CURRENT_TIMESTAMP, 'overdue')";
+
+                try (PreparedStatement checkStmt = conn.prepareStatement(penaltyCheckQuery)) {
+                    checkStmt.setInt(1, borrowerId);
+                    checkStmt.setInt(2, bookId);
+                    ResultSet checkRs = checkStmt.executeQuery();
+
+                    if (checkRs.next() && checkRs.getInt(1) == 0) { 
+                        try (PreparedStatement insertStmt = conn.prepareStatement(penaltyInsertQuery)) {
+                            insertStmt.setInt(1, borrowerId);
+                            insertStmt.setInt(2, bookId);
+                            int rowsAffected = insertStmt.executeUpdate();
+
+                            if (rowsAffected > 0) {
+                                System.out.println("Penalty added for Borrower ID: " + borrowerId + " for Book ID: " + bookId);
+                            }
+                        }
+                    } else {
+                        System.out.println("\n " );
+                    }
+                } catch (SQLException e) {
+                    System.out.println("Error checking or adding penalty: " + e.getMessage());
+                }
+            }
         }
 
     } catch (SQLException e) {
         System.out.println("Error retrieving borrowed books: " + e.getMessage());
     }
 }
-
 private void displayBooksWithAvailability() {
     String sqlQuery = "SELECT b.b_id, b.b_title, b.b_author, " +
                       "CASE WHEN bb.b_id IS NULL THEN 'Available' ELSE 'Not Available' END AS availability " +
@@ -417,77 +441,6 @@ private int calculateDateDifference(String startDate, String endDate) {
     }
     return 0; 
 }
-
-private void calculatePenalties() {
-   int borrowerId = getValidIntegerInput("Enter Borrower ID to assign a penalty: ");
-    scanner.nextLine(); 
-
-    String sqlQuery = "SELECT bb.b_id, bk.b_title " +
-                      "FROM tbl_borrowedbooks bb " +
-                      "JOIN tbl_books bk ON bb.b_id = bk.b_id " +
-                      "WHERE bb.br_id = ?";
-
-    try (Connection conn = dbConfig.connectDB();
-         PreparedStatement pstmt = conn.prepareStatement(sqlQuery)) {
-        pstmt.setInt(1, borrowerId);
-        ResultSet rs = pstmt.executeQuery();
-        
-        boolean hasOverdueBooks = false;
-
-        while (rs.next()) {
-            int bookId = rs.getInt("b_id");
-            String bookTitle = rs.getString("b_title");
-
-          
-            int overdueDays = calculateOverdueDays(borrowerId, bookId);
-
-            if (overdueDays > 0) {
-                
-                hasOverdueBooks = true;
-
-               
-                String penaltyCheckQuery = "SELECT COUNT(*) FROM tbl_penalties WHERE br_id = ? AND b_id = ?";
-                try (PreparedStatement penaltyCheckStmt = conn.prepareStatement(penaltyCheckQuery)) {
-                    penaltyCheckStmt.setInt(1, borrowerId);
-                    penaltyCheckStmt.setInt(2, bookId);
-                    ResultSet penaltyCheckRs = penaltyCheckStmt.executeQuery();
-                    
-                    
-                    if (penaltyCheckRs.next() && penaltyCheckRs.getInt(1) == 0) {
-                        
-                        String penaltySql = "INSERT INTO tbl_penalties (br_id, b_id, date_assigned, penalty_status) " +
-                                            "VALUES (?, ?, CURRENT_TIMESTAMP, 'overdue')";
-                                   
-                        try (PreparedStatement penaltyStmt = conn.prepareStatement(penaltySql)) {
-                            penaltyStmt.setInt(1, borrowerId);
-                            penaltyStmt.setInt(2, bookId);
-                            int rowsAffected = penaltyStmt.executeUpdate();
-
-                            if (rowsAffected > 0) {
-                                System.out.println("Penalty assigned to Borrower ID: " + borrowerId + " for book: " + bookTitle);
-                            } else {
-                                System.out.println("Failed to assign penalty to Borrower ID: " + borrowerId + " for book: " + bookTitle);
-                            }
-                        }
-                    } else {
-                        System.out.println("Penalty already exists for Borrower ID: " + borrowerId + " for book: " + bookTitle);
-                    }
-                }
-            } else {
-               
-                System.out.println("Penalty cannot be recorded because the book '" + bookTitle + "' is not overdue.");
-            }
-        }
-
-        if (!hasOverdueBooks) {
-            System.out.println("No overdue books found for Borrower ID: " + borrowerId);
-        }
-    } catch (SQLException e) {
-        System.out.println("Error calculating penalties: " + e.getMessage());
-    }
-}
-
-
 
 
 
